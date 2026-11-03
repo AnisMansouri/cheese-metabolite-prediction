@@ -1,0 +1,240 @@
+library(edgeR)
+
+
+# Data pre-processing
+
+# Data loading
+execo_backup = read.csv("raw_counts.csv", sep = ";")
+samples_data = read.csv("sample_classes.csv", sep = ";")
+
+met_df = read.csv("Execo_Aroma_class_table.csv", sep = ";")
+met_df = met_df[c(1, 2, 5, 4, 3, 6), ]
+saveRDS(met_df, "metabolites_execo.rds")
+
+group_col = paste(samples_data$Condition, samples_data$Time_point, sep = "_")
+samples_data = cbind(samples_data, group_col)
+colnames(samples_data)[5] = "Group"
+groups = factor(samples_data$Group[-c(1:3, 16:18)], levels = unique(samples_data$Group[-c(1:3, 16:18)]))
+
+# Import KO annotations
+annotation_file = read.table("Execo_Geneid_annotations.csv", sep = ";", fill = TRUE, quote = "", header = TRUE)
+
+# Extract gene IDs and K numbers
+annotation = annotation_file[c("Geneid", "KNumber")]
+colnames(annotation) = c("gene", "KO")
+annotation = annotation[annotation$KO != "", ]
+annotation = na.omit(annotation)
+rownames(annotation) = NULL
+
+
+# KO Annotation and split by species
+
+# Bacteria
+glutamicibacter_arilaitensis = execo_backup[startsWith(execo_backup$Geneid, "AARI"), ]
+rownames(glutamicibacter_arilaitensis) = NULL
+matches = na.omit(match(annotation$gene, glutamicibacter_arilaitensis$Geneid))
+glutamicibacter_arilaitensis = glutamicibacter_arilaitensis[matches, ]
+matches = na.omit(match(glutamicibacter_arilaitensis$Geneid, annotation$gene))
+glutamicibacter_arilaitensis$KO = annotation$KO[matches]
+ordered = order(rowSums(glutamicibacter_arilaitensis[-c(1, 2, 27)]), decreasing=TRUE)
+glutamicibacter_arilaitensis = glutamicibacter_arilaitensis[ordered, ]
+duplicated_KO = duplicated(glutamicibacter_arilaitensis$KO)
+glutamicibacter_arilaitensis = glutamicibacter_arilaitensis[!duplicated_KO, ]
+
+brevibacterium_aurantiacum = execo_backup[startsWith(execo_backup$Geneid, "BLINENS"), ]
+rownames(brevibacterium_aurantiacum) = NULL
+matches = na.omit(match(annotation$gene, brevibacterium_aurantiacum$Geneid))
+brevibacterium_aurantiacum = brevibacterium_aurantiacum[matches, ]
+matches = na.omit(match(brevibacterium_aurantiacum$Geneid, annotation$gene))
+brevibacterium_aurantiacum$KO = annotation$KO[matches]
+ordered = order(rowSums(brevibacterium_aurantiacum[-c(1, 2, 27)]), decreasing=TRUE)
+brevibacterium_aurantiacum = brevibacterium_aurantiacum[ordered, ]
+duplicated_KO = duplicated(brevibacterium_aurantiacum$KO)
+brevibacterium_aurantiacum = brevibacterium_aurantiacum[!duplicated_KO, ]
+
+
+corynebacterium_casei = execo_backup[startsWith(execo_backup$Geneid, "CCAS"), ]
+rownames(corynebacterium_casei) = NULL
+matches = na.omit(match(annotation$gene, corynebacterium_casei$Geneid))
+corynebacterium_casei = corynebacterium_casei[matches, ]
+matches = na.omit(match(corynebacterium_casei$Geneid, annotation$gene))
+corynebacterium_casei$KO = annotation$KO[matches]
+ordered = order(rowSums(corynebacterium_casei[-c(1, 2, 27)]), decreasing=TRUE)
+corynebacterium_casei = corynebacterium_casei[ordered, ]
+duplicated_KO = duplicated(corynebacterium_casei$KO)
+corynebacterium_casei = corynebacterium_casei[!duplicated_KO, ]
+
+
+hafnia_alvei = execo_backup[startsWith(execo_backup$Geneid, "HALV"), ]
+rownames(hafnia_alvei) = NULL
+matches = na.omit(match(annotation$gene, hafnia_alvei$Geneid))
+hafnia_alvei = hafnia_alvei[matches, ]
+matches = na.omit(match(hafnia_alvei$Geneid, annotation$gene))
+hafnia_alvei$KO = annotation$KO[matches]
+ordered = order(rowSums(hafnia_alvei[-c(1, 2, 27)]), decreasing=TRUE)
+hafnia_alvei = hafnia_alvei[ordered, ]
+duplicated_KO = duplicated(hafnia_alvei$KO)
+hafnia_alvei = hafnia_alvei[!duplicated_KO, ]
+
+
+lactococcus_lactis = execo_backup[startsWith(execo_backup$Geneid, "LLACS3"), ]
+rownames(lactococcus_lactis) = NULL
+matches = na.omit(match(annotation$gene, lactococcus_lactis$Geneid))
+lactococcus_lactis = lactococcus_lactis[matches, ]
+matches = na.omit(match(lactococcus_lactis$Geneid, annotation$gene))
+lactococcus_lactis$KO = annotation$KO[matches]
+ordered = order(rowSums(lactococcus_lactis[-c(1, 2, 27)]), decreasing=TRUE)
+lactococcus_lactis = lactococcus_lactis[ordered, ]
+duplicated_KO = duplicated(lactococcus_lactis$KO)
+lactococcus_lactis = lactococcus_lactis[!duplicated_KO, ]
+
+staphylococcus_equorum = execo_backup[startsWith(execo_backup$Geneid, "SEQMU"), ]
+rownames(staphylococcus_equorum) = NULL
+matches = na.omit(match(annotation$gene, staphylococcus_equorum$Geneid))
+staphylococcus_equorum = staphylococcus_equorum[matches, ]
+matches = na.omit(match(staphylococcus_equorum$Geneid, annotation$gene))
+staphylococcus_equorum$KO = annotation$KO[matches]
+ordered = order(rowSums(staphylococcus_equorum[-c(1, 2, 27)]), decreasing=TRUE)
+staphylococcus_equorum = staphylococcus_equorum[ordered, ]
+duplicated_KO = duplicated(staphylococcus_equorum$KO)
+staphylococcus_equorum = staphylococcus_equorum[!duplicated_KO, ]
+
+# Yeasts:
+debaryomyces_hansenii = execo_backup[startsWith(execo_backup$Geneid, "DEHA"), ]
+rownames(debaryomyces_hansenii) = NULL
+matches = na.omit(match(annotation$gene, debaryomyces_hansenii$Geneid))
+debaryomyces_hansenii = debaryomyces_hansenii[matches, ]
+matches = na.omit(match(debaryomyces_hansenii$Geneid, annotation$gene))
+debaryomyces_hansenii$KO = annotation$KO[matches]
+ordered = order(rowSums(debaryomyces_hansenii[-c(1, 2, 27)]), decreasing=TRUE)
+debaryomyces_hansenii = debaryomyces_hansenii[ordered, ]
+duplicated_KO = duplicated(debaryomyces_hansenii$KO)
+debaryomyces_hansenii = debaryomyces_hansenii[!duplicated_KO, ]
+
+geotrichum_candidum = execo_backup[startsWith(execo_backup$Geneid, "GECA"), ]
+rownames(geotrichum_candidum) = NULL
+matches = na.omit(match(annotation$gene, geotrichum_candidum$Geneid))
+geotrichum_candidum = geotrichum_candidum[matches, ]
+matches = na.omit(match(geotrichum_candidum$Geneid, annotation$gene))
+geotrichum_candidum$KO = annotation$KO[matches]
+ordered = order(rowSums(geotrichum_candidum[-c(1, 2, 27)]), decreasing=TRUE)
+geotrichum_candidum = geotrichum_candidum[ordered, ]
+duplicated_KO = duplicated(geotrichum_candidum$KO)
+geotrichum_candidum = geotrichum_candidum[!duplicated_KO, ]
+
+kluyveromyces_lactis = execo_backup[startsWith(execo_backup$Geneid, "KLLA"), ]
+rownames(kluyveromyces_lactis) = NULL
+matches = na.omit(match(annotation$gene, kluyveromyces_lactis$Geneid))
+kluyveromyces_lactis = kluyveromyces_lactis[matches, ]
+matches = na.omit(match(kluyveromyces_lactis$Geneid, annotation$gene))
+kluyveromyces_lactis$KO = annotation$KO[matches]
+ordered = order(rowSums(kluyveromyces_lactis[-c(1, 2, 27)]), decreasing=TRUE)
+kluyveromyces_lactis = kluyveromyces_lactis[ordered, ]
+duplicated_KO = duplicated(kluyveromyces_lactis$KO)
+kluyveromyces_lactis = kluyveromyces_lactis[!duplicated_KO, ]
+
+
+# Normalization
+ga_design = DGEList(counts = glutamicibacter_arilaitensis[, -c(1, 2, 27)], group = groups)
+rownames(ga_design) = glutamicibacter_arilaitensis$KO
+#highly_expressed_genes = filterByExpr(ga_design)
+#ga_filtered = ga_design[highly_expressed_genes, , keep.lib.sizes = FALSE]
+ga_normalized = calcNormFactors(ga_design, method = "TMM")
+
+ba_design = DGEList(counts = brevibacterium_aurantiacum[, -c(1, 2, 27)], group = groups)
+rownames(ba_design) = brevibacterium_aurantiacum$KO
+#highly_expressed_genes = filterByExpr(ba_design)
+#ba_filtered = ba_design[highly_expressed_genes, , keep.lib.sizes = FALSE]
+ba_normalized = calcNormFactors(ba_design, method = "TMM")
+
+cc_design = DGEList(counts = corynebacterium_casei[, -c(1, 2, 27)], group = groups)
+rownames(cc_design) = corynebacterium_casei$KO
+#highly_expressed_genes = filterByExpr(cc_design)
+#cc_filtered = cc_design[highly_expressed_genes, , keep.lib.sizes = FALSE]
+cc_normalized = calcNormFactors(cc_design, method = "TMM")
+
+ha_design = DGEList(counts = hafnia_alvei[, -c(1, 2, 27)], group = groups)
+rownames(ha_design) = hafnia_alvei$KO
+#highly_expressed_genes = filterByExpr(ha_design)
+#ha_filtered = ha_design[highly_expressed_genes, , keep.lib.sizes = FALSE]
+ha_normalized = calcNormFactors(ha_design, method = "TMM")
+
+ll_design = DGEList(counts = lactococcus_lactis[, -c(1, 2, 27)], group = groups)
+rownames(ll_design) = lactococcus_lactis$KO
+#highly_expressed_genes = filterByExpr(ll_design)
+#ll_filtered = ll_design[highly_expressed_genes, , keep.lib.sizes = FALSE]
+ll_normalized = calcNormFactors(ll_design, method = "TMM")
+
+staphylococcus_equorum[1, 3] = 1
+se_design = DGEList(counts = staphylococcus_equorum[, -c(1, 2, 27)], group = groups)
+rownames(se_design) = staphylococcus_equorum$KO
+#highly_expressed_genes = filterByExpr(se_design)
+#se_filtered = se_design[highly_expressed_genes, , keep.lib.sizes = FALSE]
+se_normalized = calcNormFactors(se_design, method = "TMM")
+
+dh_design = DGEList(counts = debaryomyces_hansenii[, -c(1, 2, 27)], group = groups)
+rownames(dh_design) = debaryomyces_hansenii$KO
+#highly_expressed_genes = filterByExpr(dh_design)
+#dh_filtered = dh_design[highly_expressed_genes, , keep.lib.sizes = FALSE]
+dh_normalized = calcNormFactors(dh_design, method = "TMM")
+
+gc_design = DGEList(counts = geotrichum_candidum[, -c(1, 2, 27)], group = groups)
+rownames(gc_design) = geotrichum_candidum$KO
+#highly_expressed_genes = filterByExpr(gc_design)
+#gc_filtered = gc_design[highly_expressed_genes, , keep.lib.sizes = FALSE]
+gc_normalized = calcNormFactors(gc_design, method = "TMM")
+
+kl_design = DGEList(counts = kluyveromyces_lactis[, -c(1, 2, 27)], group = groups)
+rownames(kl_design) = kluyveromyces_lactis$KO
+#highly_expressed_genes = filterByExpr(kl_design)
+#kl_filtered = kl_design[highly_expressed_genes, , keep.lib.sizes = FALSE]
+kl_normalized = calcNormFactors(kl_design, method = "TMM")
+
+
+
+
+normalized_matrices = list(cpm(ga_normalized), 
+                           cpm(ba_normalized), 
+                           cpm(cc_normalized), 
+                           cpm(ha_normalized),
+                     cpm(ll_normalized), 
+                     cpm(se_normalized), 
+                     cpm(dh_normalized), 
+                     cpm(gc_normalized),
+                     cpm(kl_normalized))
+
+names(normalized_matrices) = as.character(substitute(c(ga_normalized, ba_normalized, 
+                                                       cc_normalized, ha_normalized, 
+                                                       ll_normalized, se_normalized,
+                                                       dh_normalized, gc_normalized,
+                                                       kl_normalized)))[-1]
+
+# Merging
+
+new_data = t(rbind(normalized_matrices$ga_normalized, 
+                   normalized_matrices$ba_normalized, 
+                   normalized_matrices$cc_normalized, 
+                   normalized_matrices$ha_normalized,
+                   normalized_matrices$ll_normalized,
+                   normalized_matrices$se_normalized,
+                   normalized_matrices$dh_normalized, 
+                   normalized_matrices$gc_normalized, 
+                   normalized_matrices$kl_normalized))
+
+duplicated_genes = unique(colnames(new_data)[duplicated(colnames(new_data))])
+
+# Sum of the duplicated genes
+new_data_filtered = new_data
+col_vect = NULL
+for (i in 1:length(duplicated_genes)) {
+  gene_indices = which(duplicated_genes[i] == colnames(new_data_filtered))
+  sum_vector = rowSums(new_data_filtered[, gene_indices])
+  new_data_filtered = cbind(new_data_filtered, sum_vector)
+  col_vect = c(col_vect, which(duplicated_genes[i] == colnames(new_data_filtered)))
+}
+
+new_data_filtered = new_data_filtered[, -col_vect]
+colnames(new_data_filtered)[grepl("sum", colnames(new_data_filtered))] = duplicated_genes
+dim(new_data_filtered)
+
+#saveRDS(new_data_filtered, "execo_norm.rds")
