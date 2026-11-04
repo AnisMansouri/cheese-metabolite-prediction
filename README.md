@@ -97,7 +97,7 @@ The RF scripts export per-repetition metrics, prediction tables, and summary fil
 | `script_eigengene.R` | Compute eigengenes for EN-selected genes and compare their correlations with continuous metabolite measurements against randomly sampled gene sets. |
 | `script_ora.R` | Perform KO-based over-representation analysis using `clusterProfiler`. |
 | `script_microbe_contribution.R` | Estimate microbial species' contributions to selected KO features. |
-| `FTS_strategy/script_growth_aroma.R` | Examine associations between microbial growth/abundance and metabolite classes and produce a correlation plot. |
+| `FTS_strategy/script_growth_aroma.R` | Examine associations between microbial growth (CFU) and metabolite classes and produce a correlation plot. |
 
 ## Requirements
 
